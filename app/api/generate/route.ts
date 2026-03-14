@@ -56,6 +56,11 @@ Return JSON only in this exact shape:
 }
 `.trim();
 
+const withMockFallback = async (theme: string, options: GeneratorOptions) => {
+  const cards = await generateMockMetaphors(theme, options);
+  return NextResponse.json({ cards, source: 'mock' });
+};
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as RequestPayload;
@@ -66,20 +71,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Theme and options are required.' }, { status: 400 });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      const cards = await generateMockMetaphors(theme, options);
-      return NextResponse.json({ cards, source: 'mock' });
+    const openRouterApiKey = process.env.OPENROUTER_API_KEY;
+    if (!openRouterApiKey) {
+      return withMockFallback(theme, options);
     }
 
-    const completion = await fetch('https://api.openai.com/v1/chat/completions', {
+    const completion = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${openRouterApiKey}`,
+        'HTTP-Referer': process.env.OPENROUTER_SITE_URL ?? 'http://localhost:3000',
+        'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Visual Metaphor Generator',
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL ?? 'gpt-4.1-mini',
+        model: process.env.OPENROUTER_MODEL ?? 'openai/gpt-4o-mini',
         temperature: 0.85,
         response_format: { type: 'json_object' },
         messages: [
@@ -96,22 +102,19 @@ export async function POST(request: Request) {
     });
 
     if (!completion.ok) {
-      const cards = await generateMockMetaphors(theme, options);
-      return NextResponse.json({ cards, source: 'mock' });
+      return withMockFallback(theme, options);
     }
 
     const data = (await completion.json()) as ChatCompletionResponse;
     const content = data.choices?.[0]?.message?.content;
 
     if (!content) {
-      const cards = await generateMockMetaphors(theme, options);
-      return NextResponse.json({ cards, source: 'mock' });
+      return withMockFallback(theme, options);
     }
 
     const parsed = JSON.parse(content) as { cards?: Partial<MetaphorCardData>[] };
     if (!parsed.cards || !Array.isArray(parsed.cards) || !parsed.cards.length) {
-      const cards = await generateMockMetaphors(theme, options);
-      return NextResponse.json({ cards, source: 'mock' });
+      return withMockFallback(theme, options);
     }
 
     let cards = sanitizeCards(theme, parsed.cards, options.count);
@@ -120,7 +123,7 @@ export async function POST(request: Request) {
       cards = [...cards, ...mockCards.slice(0, options.count - cards.length)];
     }
 
-    return NextResponse.json({ cards, source: 'openai' });
+    return NextResponse.json({ cards, source: 'openrouter' });
   } catch {
     return NextResponse.json({ error: 'Unable to generate metaphors at this time.' }, { status: 500 });
   }

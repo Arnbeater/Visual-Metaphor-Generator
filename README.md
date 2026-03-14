@@ -43,26 +43,30 @@ npm run build
 npm run start
 ```
 
-## OpenAI API integration (via Next.js route)
+## OpenRouter API integration (via Next.js route)
 
 Generation now runs through `POST /api/generate`.
 
-- If `OPENAI_API_KEY` is configured, the route uses OpenAI and returns fresh metaphor ideas.
+- If `OPENROUTER_API_KEY` is configured, the route uses OpenRouter and returns fresh metaphor ideas.
 - If the key is missing or the API call fails, the route gracefully falls back to deterministic mock generation.
 
 Create a `.env.local` file:
 
 ```bash
-OPENAI_API_KEY=your_api_key_here
-OPENAI_MODEL=gpt-4.1-mini
+OPENROUTER_API_KEY=your_openrouter_key_here
+OPENROUTER_MODEL=openai/gpt-4o-mini
+OPENROUTER_SITE_URL=http://localhost:3000
+OPENROUTER_SITE_NAME=Visual Metaphor Generator
 ```
 
 ### Vercel setup
 
 In Vercel project settings, add environment variables:
 
-- `OPENAI_API_KEY`
-- `OPENAI_MODEL` (optional, defaults to `gpt-4.1-mini`)
+- `OPENROUTER_API_KEY`
+- `OPENROUTER_MODEL` (optional, defaults to `openai/gpt-4o-mini`)
+- `OPENROUTER_SITE_URL` (optional, used for OpenRouter app attribution header)
+- `OPENROUTER_SITE_NAME` (optional, used for OpenRouter app attribution header)
 
 Then deploy normally; no client-side key exposure is needed because the key is only used in the server route handler.
 
@@ -73,7 +77,7 @@ app/
   layout.tsx            # App shell + metadata
   page.tsx              # Main orchestration/state for generator UI
   globals.css           # Tailwind and base styles
-  api/generate/route.ts # Server-side generation route (OpenAI + fallback)
+  api/generate/route.ts # Server-side generation route (OpenRouter + fallback)
 components/
   GeneratorForm.tsx     # Input + dropdown controls + validation/error surface
   ResultsGrid.tsx       # Metaphor card grid
