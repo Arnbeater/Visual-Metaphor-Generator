@@ -17,7 +17,8 @@ A clean MVP web app for creative professionals to generate structured **visual m
   - headline angle
   - tags
 - Save favorite cards in local state
-- Copy one card, all results, or all favorites
+- Save full concept batches (theme + settings + generated cards) to browser localStorage
+- Copy one card, all results, all favorites, or a saved concept
 - Responsive layout for desktop/mobile
 
 ## Tech stack

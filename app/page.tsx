@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FavoritesSection } from '@/components/FavoritesSection';
 import { GeneratorForm } from '@/components/GeneratorForm';
 import { ResultsGrid } from '@/components/ResultsGrid';
+import { SavedConceptsSection, type SavedConcept } from '@/components/SavedConceptsSection';
 import { generateMetaphors } from '@/services/metaphorGenerator';
 import type { GeneratorOptions, MetaphorCardData } from '@/types/metaphor';
 
@@ -12,6 +13,8 @@ const initialOptions: GeneratorOptions = {
   medium: 'campaign',
   count: 6,
 };
+
+const SAVED_CONCEPTS_KEY = 'vmg_saved_concepts_v1';
 
 const serializeCard = (card: MetaphorCardData): string => {
   return [
@@ -29,9 +32,27 @@ export default function HomePage() {
   const [options, setOptions] = useState<GeneratorOptions>(initialOptions);
   const [results, setResults] = useState<MetaphorCardData[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [savedConcepts, setSavedConcepts] = useState<SavedConcept[]>([]);
   const [error, setError] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | undefined>();
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(SAVED_CONCEPTS_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as SavedConcept[];
+      if (Array.isArray(parsed)) {
+        setSavedConcepts(parsed);
+      }
+    } catch {
+      // ignore invalid localStorage payload
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(SAVED_CONCEPTS_KEY, JSON.stringify(savedConcepts));
+  }, [savedConcepts]);
 
   const favoriteCards = useMemo(
     () => favorites.map((id) => results.find((item) => item.id === id)).filter(Boolean) as MetaphorCardData[],
@@ -66,6 +87,58 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveCurrentConcept = () => {
+    if (!results.length || !theme.trim()) return;
+
+    const conceptName = `${theme.trim()} • ${options.tone}`;
+    const conceptId = `${theme.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+
+    const nextConcept: SavedConcept = {
+      id: conceptId,
+      name: conceptName,
+      theme: theme.trim(),
+      options,
+      cards: results,
+      savedAt: new Date().toISOString(),
+    };
+
+    setSavedConcepts((prev) => [nextConcept, ...prev].slice(0, 20));
+    showMessage(`Saved concept: ${conceptName}`);
+  };
+
+  const handleLoadConcept = (conceptId: string) => {
+    const concept = savedConcepts.find((item) => item.id === conceptId);
+    if (!concept) return;
+
+    setTheme(concept.theme);
+    setOptions(concept.options);
+    setResults(concept.cards);
+    setFavorites([]);
+    showMessage(`Loaded concept: ${concept.name}`);
+  };
+
+  const handleDeleteConcept = (conceptId: string) => {
+    setSavedConcepts((prev) => prev.filter((item) => item.id !== conceptId));
+    showMessage('Saved concept deleted.');
+  };
+
+  const handleCopyConcept = async (conceptId: string) => {
+    const concept = savedConcepts.find((item) => item.id === conceptId);
+    if (!concept) return;
+
+    const payload = [
+      `Concept: ${concept.name}`,
+      `Theme: ${concept.theme}`,
+      `Tone: ${concept.options.tone}`,
+      `Medium: ${concept.options.medium}`,
+      '',
+      concept.cards.map((card) => serializeCard(card)).join('\n\n---\n\n'),
+    ].join('\n');
+
+    await copyText(payload);
+    showMessage(`Copied concept: ${concept.name}`);
   };
 
   const handleToggleFavorite = (id: string) => {
@@ -118,8 +191,8 @@ export default function HomePage() {
                 <p className="text-xs uppercase tracking-[0.08em] text-black/55">Saved</p>
               </div>
               <div className="soft-panel px-3 py-3 text-center">
-                <p className="text-2xl font-semibold">{options.count}</p>
-                <p className="text-xs uppercase tracking-[0.08em] text-black/55">Batch</p>
+                <p className="text-2xl font-semibold">{savedConcepts.length}</p>
+                <p className="text-xs uppercase tracking-[0.08em] text-black/55">Concepts</p>
               </div>
             </div>
           </div>
@@ -141,6 +214,13 @@ export default function HomePage() {
           {results.length ? `Showing ${results.length} generated ideas` : 'No results yet'}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleSaveCurrentConcept}
+            disabled={!results.length}
+            className="rounded-2xl border border-black/15 bg-white px-3 py-2 text-sm font-medium hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Save concept
+          </button>
           <button
             onClick={handleCopyAllResults}
             disabled={!results.length}
@@ -167,17 +247,26 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      {!!results.length && !loading ? (
-        <div className="space-y-6">
-          <ResultsGrid
-            cards={results}
-            favorites={favorites}
-            onToggleFavorite={handleToggleFavorite}
-            onCopyCard={handleCopyCard}
-          />
-          <FavoritesSection favorites={favoriteCards} onCopyAllFavorites={handleCopyAllFavorites} />
-        </div>
-      ) : null}
+      <div className="space-y-6">
+        <SavedConceptsSection
+          savedConcepts={savedConcepts}
+          onLoadConcept={handleLoadConcept}
+          onDeleteConcept={handleDeleteConcept}
+          onCopyConcept={handleCopyConcept}
+        />
+
+        {!!results.length && !loading ? (
+          <>
+            <ResultsGrid
+              cards={results}
+              favorites={favorites}
+              onToggleFavorite={handleToggleFavorite}
+              onCopyCard={handleCopyCard}
+            />
+            <FavoritesSection favorites={favoriteCards} onCopyAllFavorites={handleCopyAllFavorites} />
+          </>
+        ) : null}
+      </div>
     </main>
   );
 }
