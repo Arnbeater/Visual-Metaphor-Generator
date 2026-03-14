@@ -10,11 +10,11 @@ type ResultsGridProps = {
 
 export function ResultsGrid({ cards, favorites, onToggleFavorite, onCopyCard }: ResultsGridProps) {
   return (
-    <section>
-      <div className="mb-4 flex items-end justify-between">
+    <section className="editorial-shell p-5 sm:p-6">
+      <div className="mb-5 flex items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold">Generated metaphors</h2>
-          <p className="text-sm text-black/70">Structured ideas ready for concepting, campaigns, or content.</p>
+          <h2 className="text-xl font-semibold tracking-tight">Generated Metaphors</h2>
+          <p className="text-sm text-black/65">Structured cards for campaign, brand, and editorial concept development.</p>
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

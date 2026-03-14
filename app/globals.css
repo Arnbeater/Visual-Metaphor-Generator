@@ -7,11 +7,26 @@
 }
 
 body {
-  @apply bg-stone text-ink antialiased;
+  @apply bg-[#d9d5c8] text-ink antialiased;
+  background-image: radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.2), transparent 45%);
+}
+
+button,
+input,
+select {
+  @apply transition;
 }
 
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-stone;
+  @apply outline-none ring-2 ring-[#ff5938] ring-offset-2 ring-offset-[#d9d5c8];
+}
+
+.editorial-shell {
+  @apply rounded-[2.2rem] border border-black/10 bg-[#efede3] shadow-[0_12px_40px_rgba(10,12,18,0.14)];
+}
+
+.soft-panel {
+  @apply rounded-[1.6rem] border border-black/10 bg-white/70;
 }

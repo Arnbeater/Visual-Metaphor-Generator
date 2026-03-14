@@ -9,13 +9,13 @@ type MetaphorCardProps = {
 
 export function MetaphorCard({ card, isFavorite, onToggleFavorite, onCopyCard }: MetaphorCardProps) {
   return (
-    <article className="flex h-full flex-col rounded-xl border border-black/10 bg-white p-4 shadow-card">
+    <article className="soft-panel flex h-full flex-col p-4 shadow-[0_8px_20px_rgba(0,0,0,0.07)] sm:p-5">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-base font-semibold leading-tight">{card.title}</h3>
+        <h3 className="max-w-[82%] text-lg font-semibold leading-tight tracking-tight">{card.title}</h3>
         <button
           onClick={() => onToggleFavorite(card.id)}
-          className={`rounded-full px-3 py-1 text-xs font-medium ${
-            isFavorite ? 'bg-amber-100 text-amber-900' : 'bg-black/5 text-black/70'
+          className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] ${
+            isFavorite ? 'border-[#ff5938]/50 bg-[#ff5938]/15 text-[#a8321b]' : 'border-black/10 bg-white/80 text-black/60'
           }`}
         >
           {isFavorite ? 'Saved' : 'Save'}
@@ -24,26 +24,26 @@ export function MetaphorCard({ card, isFavorite, onToggleFavorite, onCopyCard }:
 
       <dl className="mt-4 space-y-3 text-sm">
         <div>
-          <dt className="font-medium text-black/70">Concept</dt>
+          <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-black/55">Concept</dt>
           <dd>{card.concept}</dd>
         </div>
         <div>
-          <dt className="font-medium text-black/70">Why it works</dt>
+          <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-black/55">Why it works</dt>
           <dd>{card.whyItWorks}</dd>
         </div>
         <div>
-          <dt className="font-medium text-black/70">Visual execution</dt>
+          <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-black/55">Visual execution</dt>
           <dd>{card.visualExecution}</dd>
         </div>
         <div>
-          <dt className="font-medium text-black/70">Headline angle</dt>
+          <dt className="text-[11px] font-semibold uppercase tracking-[0.1em] text-black/55">Headline angle</dt>
           <dd className="italic">“{card.headlineAngle}”</dd>
         </div>
       </dl>
 
       <div className="mt-4 flex flex-wrap gap-2">
         {card.tags.map((tag) => (
-          <span key={tag} className="rounded-full bg-black/5 px-2.5 py-1 text-xs text-black/80">
+          <span key={tag} className="rounded-full border border-black/10 bg-white/70 px-2.5 py-1 text-xs text-black/75">
             #{tag}
           </span>
         ))}
@@ -51,7 +51,7 @@ export function MetaphorCard({ card, isFavorite, onToggleFavorite, onCopyCard }:
 
       <button
         onClick={() => onCopyCard(card)}
-        className="mt-4 rounded-lg border border-black/10 px-3 py-2 text-sm font-medium text-black/80 hover:bg-black/5"
+        className="mt-5 rounded-2xl border border-black/15 bg-white px-3 py-2 text-sm font-medium text-black/80 hover:bg-black hover:text-white"
       >
         Copy card
       </button>
