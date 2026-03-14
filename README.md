@@ -43,36 +43,49 @@ npm run build
 npm run start
 ```
 
+## OpenAI API integration (via Next.js route)
+
+Generation now runs through `POST /api/generate`.
+
+- If `OPENAI_API_KEY` is configured, the route uses OpenAI and returns fresh metaphor ideas.
+- If the key is missing or the API call fails, the route gracefully falls back to deterministic mock generation.
+
+Create a `.env.local` file:
+
+```bash
+OPENAI_API_KEY=your_api_key_here
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+### Vercel setup
+
+In Vercel project settings, add environment variables:
+
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL` (optional, defaults to `gpt-4.1-mini`)
+
+Then deploy normally; no client-side key exposure is needed because the key is only used in the server route handler.
+
 ## Architecture
 
 ```text
 app/
-  layout.tsx          # App shell + metadata
-  page.tsx            # Main orchestration/state for generator UI
-  globals.css         # Tailwind and base styles
+  layout.tsx            # App shell + metadata
+  page.tsx              # Main orchestration/state for generator UI
+  globals.css           # Tailwind and base styles
+  api/generate/route.ts # Server-side generation route (OpenAI + fallback)
 components/
-  GeneratorForm.tsx   # Input + dropdown controls + validation/error surface
-  ResultsGrid.tsx     # Metaphor card grid
-  MetaphorCard.tsx    # Reusable card presentation + save/copy actions
-  FavoritesSection.tsx# Saved cards summary + bulk copy
+  GeneratorForm.tsx     # Input + dropdown controls + validation/error surface
+  ResultsGrid.tsx       # Metaphor card grid
+  MetaphorCard.tsx      # Reusable card presentation + save/copy actions
+  FavoritesSection.tsx  # Saved cards summary + bulk copy
 services/
-  metaphorGenerator.ts# Deterministic generator service layer (mock mode)
+  metaphorGenerator.ts  # Client service + deterministic mock generator
 data/
-  mockMetaphors.ts    # Theme seed dataset (>=5 themes)
+  mockMetaphors.ts      # Theme seed dataset (>=5 themes)
 types/
-  metaphor.ts         # Shared domain types
+  metaphor.ts           # Shared domain types
 ```
-
-### Generator service design
-
-The app uses a deterministic mock generator in `services/metaphorGenerator.ts`.
-
-- Matches known themes from `data/mockMetaphors.ts`
-- Builds variants using deterministic hashing + option-aware modifiers
-- Adds tone and medium specific framing to each result
-- Falls back to structured placeholders for unknown themes
-
-This keeps the UI production-ready while making it easy to swap in a live OpenAI integration later (replace only the service implementation and keep component contracts).
 
 ## UX notes
 

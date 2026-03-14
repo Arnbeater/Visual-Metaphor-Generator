@@ -73,7 +73,7 @@ const buildFallbackCards = (theme: string): Omit<MetaphorCardData, 'id'>[] => {
   return [
     {
       title: `${cleanTheme} as Fault Line`,
-      concept: `A stable surface split by a fresh fault line that keeps spreading through the scene.`,
+      concept: 'A stable surface split by a fresh fault line that keeps spreading through the scene.',
       whyItWorks: 'Conveys hidden tension becoming visible and impossible to ignore.',
       visualExecution: 'Architectural concrete plane with precise fracture, dust, and directional side-light.',
       headlineAngle: `When ${cleanTheme} shifts, every layer above it must respond.`,
@@ -98,7 +98,7 @@ const buildFallbackCards = (theme: string): Omit<MetaphorCardData, 'id'>[] => {
   ];
 };
 
-export const generateMetaphors = async (
+export const generateMockMetaphors = async (
   theme: string,
   options: GeneratorOptions,
 ): Promise<MetaphorCardData[]> => {
@@ -122,4 +122,34 @@ export const generateMetaphors = async (
   }
 
   return cards;
+};
+
+export const generateMetaphors = async (
+  theme: string,
+  options: GeneratorOptions,
+): Promise<MetaphorCardData[]> => {
+  if (!theme.trim()) {
+    throw new Error('Theme is required to generate visual metaphors.');
+  }
+
+  try {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ theme, options }),
+    });
+
+    if (response.ok) {
+      const data = (await response.json()) as { cards?: MetaphorCardData[] };
+      if (Array.isArray(data.cards) && data.cards.length) {
+        return data.cards;
+      }
+    }
+  } catch {
+    // fall back to deterministic mock generator when API route is unavailable
+  }
+
+  return generateMockMetaphors(theme, options);
 };
